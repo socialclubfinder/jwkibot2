@@ -31,7 +31,7 @@ with col2:
 
 st.title(" ")
 
-
+#add
 # Sidebar
 st.sidebar.title("Jürgen Wolf")
 st.sidebar.title("Über mich")
