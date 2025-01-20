@@ -1,0 +1,31 @@
+Lebenslauf
+Name: Jürgen Wolf
+geboren: 04.04.1981
+Wohnhaft: 3331 Kematen
+
+
+Beruf: Maschinenschlosser und Restaurantfachmann
+Bildung:
+• Ausbildung zum Maschinenschlosser
+• Ausbildung zum Restaurantfachmann
+• Selfthought in Programming
+
+Berufserfahrung:
+• Maschinenschlosser: 3 Jahre Lehre bei ÖBB
+• Restaurantfachmann: 8 Jahre Erfahrung in Gastronomie
+• Angestellter bei AG KEG: 5 Jahre von 2018 -2023
+• Selbstständig als WebDeveloper von 2019 - bis jetzt
+• Arbeiter bei AustriaJuice in der GetränkeProduktion seit 2023
+
+Fähigkeiten und Kenntnisse:
+•
+•
+•
+•
+Fundierte Kenntnisse in Maschinenschlosserarbeiten
+Erfahrung in der Gastronomie, Immobilienbereich und WebDevelopment
+
+Fließend in Deutsch/Englisch
+Programmiersprachen: Javascript, Php ,Python, SQL
+Berufswunsch: DataScience, MaschineLearning
+Hobbys: Skifahren, Kitesurfen, Tauchen
