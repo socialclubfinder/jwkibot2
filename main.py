@@ -1,11 +1,6 @@
 import streamlit as st
 import openai
-import os
-from dotenv import load_dotenv
 from ratelimit import limits, RateLimitException, sleep_and_retry
-
-# Load environment variables from .env file
-load_dotenv()
 
 # Streamlit page configuration
 st.set_page_config(
@@ -18,7 +13,7 @@ st.set_page_config(
 col1, col2 = st.columns(2)
 
 with col1:
-    st.subheader("Hallo :wave:")
+    st.subheader("Hallo 👋")
     st.title("Ich bin Jürgen Wolf")
 
 with col2:
@@ -42,9 +37,8 @@ st.sidebar.info("Entdecken Sie mehr spannende Projekte und Tutorials.")
 st.sidebar.title("Kontakt")
 st.sidebar.info("Kontaktieren Sie mich für berufliche Möglichkeiten.")
 
-# API Key Management
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-openai.api_key = OPENAI_API_KEY
+# API Key Management using Streamlit Secrets
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # Load content from files
 cv_path = "code.txt"  # Path to the CV file
@@ -76,13 +70,15 @@ ONE_MINUTE = 60
 @limits(calls=5, period=ONE_MINUTE)
 def get_chatgpt_response(prompt):
     try:
-        response = openai.Completion.create(
-            model="gpt-3.5-turbo",  # Ensure you are using the correct model
-            prompt=f"Du bist ein Chatbot, der Fragen basierend auf Jürgen Wolfs Lebenslauf und zusätzlichen Informationen beantwortet:\n\n{combined_content}\n\nFrage: {prompt}",
-            max_tokens=500,
-            temperature=0.7
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": f"Du bist ein Chatbot, der Fragen basierend auf Jürgen Wolfs Lebenslauf und zusätzlichen Informationen beantwortet:\n\n{combined_content}"},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=500
         )
-        return response.choices[0].text.strip()  # Adjust based on the new API response format
+        return response.choices[0].message["content"]
     except Exception as e:
         return f"Fehler: {str(e)}"
 
@@ -136,6 +132,8 @@ if st.session_state.conversations:
         st.markdown(f"**Antwort:** {a}")
         st.markdown("---")
 
-# File download in the sidebar
-with open(cv_path) as f:
-    st.sidebar.download_button("Lebenslauf herunterladen", f, file_name="JürgenWolf_Lebenslauf.txt")
+# File download in sidebar
+with st.sidebar:
+    st.subheader("Lebenslauf herunterladen:")
+    with open(cv_path) as f:
+        st.download_button("Lebenslauf herunterladen", f, file_name="JürgenWolf_Lebenslauf.txt")
