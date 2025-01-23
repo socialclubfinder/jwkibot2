@@ -38,7 +38,12 @@ st.sidebar.title("Kontakt")
 st.sidebar.info("Kontaktieren Sie mich für berufliche Möglichkeiten.")
 
 # API Key Management using Streamlit Secrets
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+try:
+    openai.api_key = st.secrets["OPENAI_API_KEY"]
+except KeyError:
+    st.error("Fehler: OPENAI_API_KEY ist nicht in den Streamlit Secrets konfiguriert. "
+             "Bitte stellen Sie sicher, dass der Schlüssel in den App-Einstellungen hinzugefügt wurde.")
+    st.stop()
 
 # Load content from files
 cv_path = "code.txt"  # Path to the CV file
