@@ -71,15 +71,15 @@ ONE_MINUTE = 60
 def get_chatgpt_response(prompt):
     try:
         # Update this part to match the new OpenAI API v1.0.0+ syntax
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
+        response = openai.chat.completions.create(
+            model="gpt-4",  # Use the GPT-4 model
             messages=[
                 {"role": "system", "content": f"Du bist ein Chatbot, der Fragen basierend auf Jürgen Wolfs Lebenslauf und zusätzlichen Informationen beantwortet:\n\n{combined_content}"},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=500
         )
-        return response.choices[0].message["content"]
+        return response['choices'][0]['message']['content']  # Adjusted response handling
     except Exception as e:
         return f"Fehler: {str(e)}"
 
