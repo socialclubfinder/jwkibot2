@@ -28,17 +28,15 @@ st.title(" ")
 st.write("Frag mich alles!")
 
 # Sidebar
-st.sidebar.title("Über mich")
+st.sidebar.title("Jürgen Wolf")
 st.sidebar.info(
     "Dieser Chatbot nutzt ChatGPT, um Ihre Fragen zu meinem Lebenslauf und weiteren Erfahrungen zu beantworten. "
     "Fragen Sie mich gerne nach meinen Fähigkeiten, Erfahrungen oder meinem beruflichen Werdegang!"
 )
 
-st.sidebar.title("Jürgen Wolf")
-st.sidebar.info("Entdecken Sie mehr spannende Projekte und Tutorials.")
 
 st.sidebar.title("Kontakt")
-st.sidebar.info("Kontaktieren Sie mich für berufliche Möglichkeiten.")
+st.sidebar.info("jurgenwo81@gmail.com")
 
 # Load content from files
 cv_path = "code.txt"  # Path to the CV file
@@ -58,11 +56,6 @@ additional_info_content = load_file(additional_info_path)
 # Combine content from both files
 combined_content = f"{cv_content}\n\nZusätzliche Informationen:\n{additional_info_content}"
 
-# File upload feature
-uploaded_file = st.sidebar.file_uploader("Laden Sie Ihr CV- oder Informationsdokument hoch", type=["txt"])
-if uploaded_file:
-    uploaded_content = uploaded_file.read().decode("utf-8")
-    combined_content += f"\n\nHochgeladener Inhalt:\n{uploaded_content}"
 
 # Rate limiting: Allow 5 requests per minute per user
 ONE_MINUTE = 60
