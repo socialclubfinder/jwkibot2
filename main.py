@@ -79,7 +79,10 @@ def get_chatgpt_response(prompt):
             ],
             max_tokens=500
         )
-        return response['choices'][0]['message']['content']  # Adjusted response handling
+        
+        # The new response format doesn't use subscripts, so we use dot notation
+        return response.choices[0].message['content']  # Updated response handling
+        
     except Exception as e:
         return f"Fehler: {str(e)}"
 
