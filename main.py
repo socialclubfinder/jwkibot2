@@ -76,15 +76,13 @@ ONE_MINUTE = 60
 @limits(calls=5, period=ONE_MINUTE)
 def get_chatgpt_response(prompt):
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=[
-                {"role": "system", "content": f"Du bist ein Chatbot, der Fragen basierend auf Jürgen Wolfs Lebenslauf und zusätzlichen Informationen beantwortet:\n\n{combined_content}"},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=500
+        response = openai.Completion.create(
+            model="gpt-3.5-turbo",  # Ensure you are using the correct model
+            prompt=f"Du bist ein Chatbot, der Fragen basierend auf Jürgen Wolfs Lebenslauf und zusätzlichen Informationen beantwortet:\n\n{combined_content}\n\nFrage: {prompt}",
+            max_tokens=500,
+            temperature=0.7
         )
-        return response.choices[0].message["content"]
+        return response.choices[0].text.strip()  # Adjust based on the new API response format
     except Exception as e:
         return f"Fehler: {str(e)}"
 
