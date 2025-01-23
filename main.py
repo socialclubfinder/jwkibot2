@@ -7,7 +7,7 @@ import time
 st.set_page_config(page_title="Jürgens KI ChatBot", page_icon="💼")
 
 # Initialize OpenAI client
-client = OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
+client = OpenAI(api_key=st.secrets["openai"]["OPENAI_API_KEY"])
 
 # Load content from files
 def load_file(file_path):
