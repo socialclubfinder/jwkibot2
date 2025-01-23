@@ -1,5 +1,5 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 import os
 from dotenv import load_dotenv
 from ratelimit import limits, RateLimitException, sleep_and_retry
@@ -10,7 +10,6 @@ load_dotenv()
 # Load content from files
 cv_path = "code.txt"  # Path to the CV file
 additional_info_path = "info.txt"  # Path to the additional info file
-
 
 # Streamlit page configuration
 st.set_page_config(
@@ -31,7 +30,6 @@ with col2:
 
 st.title(" ")
 
-#add
 # Sidebar
 st.sidebar.title("Jürgen Wolf")
 st.sidebar.title("Über mich")
@@ -47,11 +45,8 @@ st.sidebar.info("Kontaktieren Sie mich für berufliche Möglichkeiten.\n\n email
 with open(cv_path) as f:
     st.sidebar.download_button("Lebenslauf herunterladen", f, file_name="JürgenWolf_Lebenslauf.txt")
 
-
 # API Key Management
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-openai.api_key = OPENAI_API_KEY
-
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def load_file(file_path):
     try:
@@ -78,7 +73,7 @@ def get_chatgpt_response(prompt):
             return "Entschuldigung, diese Frage ist unangemessen oder passt nicht zu meinen Aufgaben. Ich beantworte nur Fragen zu Jürgen Wolfs Lebenslauf und Erfahrungen."
 
         # Anfrage an OpenAI senden
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[
                 {"role": "system", "content": f"Du bist ein freundlicher und humorvoller Chatbot, der Fragen basierend auf Jürgen Wolfs Lebenslauf und zusätzlichen Informationen beantwortet:\n\n{combined_content}"},
@@ -86,7 +81,7 @@ def get_chatgpt_response(prompt):
             ],
             max_tokens=500
         )
-        return response.choices[0].message["content"]
+        return response.choices[0].message.content
     except Exception as e:
         return f"Fehler: {str(e)}"
 
@@ -99,7 +94,6 @@ def is_relevant_question(prompt):
     ]
     # Überprüfen, ob die Frage relevante Schlüsselwörter enthält
     return any(keyword.lower() in prompt.lower() for keyword in relevant_keywords)
-
 
 # Predefined questions
 predefined_questions = [
@@ -150,6 +144,3 @@ if st.session_state.conversations:
         st.markdown(f"**Frage:** {q}")
         st.markdown(f"**Antwort:** {a}")
         st.markdown("---")
-
-
-#test
