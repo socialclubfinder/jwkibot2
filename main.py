@@ -43,6 +43,9 @@ st.sidebar.info(
 st.sidebar.title("Kontakt")
 st.sidebar.info("Kontaktieren Sie mich für berufliche Möglichkeiten.\n\n email: jurgenwo81@gmail.com")
 
+# Sidebar - File download
+with open(cv_path) as f:
+    st.sidebar.download_button("Lebenslauf herunterladen", f, file_name="JürgenWolf_Lebenslauf.txt")
 
 
 # API Key Management
@@ -65,15 +68,20 @@ additional_info_content = load_file(additional_info_path)
 combined_content = f"{cv_content}\n\nZusätzliche Informationen:\n{additional_info_content}"
 
 # Rate limiting: Allow 5 requests per minute per user
-ONE_MINUTE = 60
+ONE_MINUTE = 120
 @sleep_and_retry
 @limits(calls=5, period=ONE_MINUTE)
 def get_chatgpt_response(prompt):
     try:
+        # Überprüfung auf unangemessene oder irrelevante Fragen
+        if not is_relevant_question(prompt):
+            return "Entschuldigung, diese Frage ist unangemessen oder passt nicht zu meinen Aufgaben. Ich beantworte nur Fragen zu Jürgen Wolfs Lebenslauf und Erfahrungen."
+
+        # Anfrage an OpenAI senden
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                {"role": "system", "content": f"Du bist ein Chatbot, der Fragen basierend auf Jürgen Wolfs Lebenslauf und zusätzlichen Informationen beantwortet:\n\n{combined_content}"},
+                {"role": "system", "content": f"Du bist ein freundlicher und humorvoller Chatbot, der Fragen basierend auf Jürgen Wolfs Lebenslauf und zusätzlichen Informationen beantwortet:\n\n{combined_content}"},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=500
@@ -81,6 +89,17 @@ def get_chatgpt_response(prompt):
         return response.choices[0].message["content"]
     except Exception as e:
         return f"Fehler: {str(e)}"
+
+# Hilfsfunktion zur Überprüfung der Relevanz der Frage
+def is_relevant_question(prompt):
+    relevant_keywords = [
+        "Lebenslauf", "Erfahrungen", "Fähigkeiten", "Beruf", "Studium", 
+        "Jürgen Wolf", "Karriere", "Projekte", "Programmieren", "Machine Learning", 
+        "Web3", "Bildung", "FH", "Studienberechtigungsprüfung", "alter", "wohnort"
+    ]
+    # Überprüfen, ob die Frage relevante Schlüsselwörter enthält
+    return any(keyword.lower() in prompt.lower() for keyword in relevant_keywords)
+
 
 # Predefined questions
 predefined_questions = [
@@ -133,6 +152,3 @@ if st.session_state.conversations:
         st.markdown("---")
 
 
-# File download
-with open(cv_path) as f:
-    st.download_button("Lebenslauf herunterladen", f, file_name="JürgenWolf_Lebenslauf.txt")
