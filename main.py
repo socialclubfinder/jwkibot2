@@ -1,9 +1,10 @@
 import openai
 import streamlit as st
 from ratelimit import limits, RateLimitException, sleep_and_retry
+import os
 
-# Initialize OpenAI with API key from Streamlit Secrets
-openai.api_key = st.secrets["OPENAI_API_KEY"]
+# Initialize OpenAI client with API key from Streamlit Secrets
+client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # Streamlit page configuration
 st.set_page_config(
@@ -70,19 +71,16 @@ ONE_MINUTE = 60
 @limits(calls=5, period=ONE_MINUTE)
 def get_chatgpt_response(prompt):
     try:
-        # Update this part to match the new OpenAI API v1.0.0+ syntax
-        response = openai.chat.completions.create(
-            model="gpt-4",  # Use the GPT-4 model
+        # Using OpenAI client and method
+        chat_completion = client.chat.completions.create(
+            model="gpt-4",  # Make sure you're using the right model
             messages=[
                 {"role": "system", "content": f"Du bist ein Chatbot, der Fragen basierend auf Jürgen Wolfs Lebenslauf und zusätzlichen Informationen beantwortet:\n\n{combined_content}"},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=500
         )
-        
-        # The new response format doesn't use subscripts, so we use dot notation
-        return response.choices[0].message['content']  # Updated response handling
-        
+        return chat_completion.choices[0].message["content"]
     except Exception as e:
         return f"Fehler: {str(e)}"
 
