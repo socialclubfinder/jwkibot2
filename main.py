@@ -1,7 +1,6 @@
 import openai
 import streamlit as st
 from ratelimit import limits, RateLimitException, sleep_and_retry
-import os
 
 # Initialize OpenAI client with API key from Streamlit Secrets
 client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
@@ -80,7 +79,8 @@ def get_chatgpt_response(prompt):
             ],
             max_tokens=500
         )
-        return completion.choices[0].message["content"]
+        # Corrected response extraction
+        return completion['choices'][0]['message']['content']
     except Exception as e:
         return f"Fehler: {str(e)}"
 
