@@ -1,94 +1,143 @@
 import streamlit as st
-from openai import OpenAI
-from collections import defaultdict, deque
-import time
+import openai
+import os
+from dotenv import load_dotenv
+from ratelimit import limits, RateLimitException, sleep_and_retry
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Streamlit page configuration
-st.set_page_config(page_title="Jürgens KI ChatBot", page_icon="💼")
+st.set_page_config(
+    page_title="Jürgens KI ChatBot",
+    page_icon="💼",
+    layout="centered",
+    initial_sidebar_state="expanded",
+)
 
-# Initialize OpenAI client
-client = OpenAI(api_key=st.secrets["openai"]["OPENAI_API_KEY"])
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("Hallo :wave:")
+    st.title("Ich bin Jürgen Wolf")
+
+with col2:
+    st.image("logo.png")
+
+st.title(" ")
+
+# Main content
+st.write("Frag mich alles!")
+
+# Sidebar
+st.sidebar.title("Über mich")
+st.sidebar.info(
+    "Dieser Chatbot nutzt ChatGPT, um Ihre Fragen zu meinem Lebenslauf und weiteren Erfahrungen zu beantworten. "
+    "Fragen Sie mich gerne nach meinen Fähigkeiten, Erfahrungen oder meinem beruflichen Werdegang!"
+)
+
+st.sidebar.title("Jürgen Wolf")
+st.sidebar.info("Entdecken Sie mehr spannende Projekte und Tutorials.")
+
+st.sidebar.title("Kontakt")
+st.sidebar.info("Kontaktieren Sie mich für berufliche Möglichkeiten.")
+
+# API Key Management
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+openai.api_key = OPENAI_API_KEY
 
 # Load content from files
+cv_path = "code.txt"  # Path to the CV file
+additional_info_path = "info.txt"  # Path to the additional info file
+
 def load_file(file_path):
     try:
         with open(file_path, 'r') as file:
             return file.read()
     except FileNotFoundError:
-        st.error(f"Datei nicht gefunden: {file_path}")
+        st.error(f"Datei nicht gefunden: {file_path}. Bitte überprüfen Sie den Dateipfad.")
         return ""
 
-cv_content = load_file("code.txt")
-additional_info_content = load_file("info.txt")
+cv_content = load_file(cv_path)
+additional_info_content = load_file(additional_info_path)
 
-# Combine content for context
+# Combine content from both files
 combined_content = f"{cv_content}\n\nZusätzliche Informationen:\n{additional_info_content}"
 
-# Rate limit settings
-RATE_LIMIT = 5  # Max messages
-RATE_PERIOD = 120  # Time period in seconds (2 minutes)
-user_activity = defaultdict(lambda: deque(maxlen=RATE_LIMIT))
+# File upload feature
+uploaded_file = st.sidebar.file_uploader("Laden Sie Ihr CV- oder Informationsdokument hoch", type=["txt"])
+if uploaded_file:
+    uploaded_content = uploaded_file.read().decode("utf-8")
+    combined_content += f"\n\nHochgeladener Inhalt:\n{uploaded_content}"
 
-def is_rate_limited(user_id):
-    """Check if the user is rate-limited."""
-    now = time.time()
-    timestamps = user_activity[user_id]
-
-    # Remove timestamps outside the rate limit period
-    while timestamps and now - timestamps[0] > RATE_PERIOD:
-        timestamps.popleft()
-
-    # Check if the user exceeds the rate limit
-    return len(timestamps) >= RATE_LIMIT
-
+# Rate limiting: Allow 5 requests per minute per user
+ONE_MINUTE = 60
+@sleep_and_retry
+@limits(calls=5, period=ONE_MINUTE)
 def get_chatgpt_response(prompt):
-    response = client.chat.completions.create(
-        model="gpt-3.5-turbo",
-        messages=[
-            {"role": "system", "content": f"Du bist ein freundlicher Chatbot, der Fragen basierend auf Jürgen Wolfs Lebenslauf beantwortet:\n\n{combined_content}"},
-            {"role": "user", "content": prompt}
-        ],
-        max_tokens=500
-    )
-    return response.choices[0].message.content
+    try:
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": f"Du bist ein Chatbot, der Fragen basierend auf Jürgen Wolfs Lebenslauf und zusätzlichen Informationen beantwortet:\n\n{combined_content}"},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=500
+        )
+        return response.choices[0].message["content"]
+    except Exception as e:
+        return f"Fehler: {str(e)}"
 
-# UI Layout
-st.title("Jürgen Wolf")
-st.sidebar.title("Über mich")
-st.sidebar.info("Chatbot zu Jürgen Wolfs Lebenslauf")
+# Predefined questions
+predefined_questions = [
+    "Was sind Jürgen Wolfs Hauptfähigkeiten?",
+    "Wie sieht der Bildungshintergrund von Jürgen Wolf aus?",
+    "Was ist die aktuellste Berufserfahrung von Jürgen Wolf?",
+    "Kannst du die zusätzlichen Erfolge von Jürgen Wolf zusammenfassen?"
+]
 
-# Get user identifier
-user_id = st.session_state.get("user_id", st.session_state.session_id)
-
-# Rate limit check
-if is_rate_limited(user_id):
-    st.error("Rate limit überschritten. Bitte warten Sie, bevor Sie weitere Fragen stellen.")
-else:
-    # Predefined questions
-    predefined_questions = [
-        "Was sind Jürgen Wolfs Hauptfähigkeiten?",
-        "Wie sieht der Bildungshintergrund aus?",
-        "Aktuelle Berufserfahrung?"
-    ]
-
-    st.subheader("Schnelle Fragen:")
-    cols = st.columns(len(predefined_questions))
-    for idx, question in enumerate(predefined_questions):
-        if cols[idx].button(question, key=f"pred_q_{idx}"):
-            user_activity[user_id].append(time.time())
+# Predefined question buttons
+st.subheader("Schnelle Fragen:")
+cols = st.columns(len(predefined_questions))
+for idx, question in enumerate(predefined_questions):
+    if cols[idx].button(question, key=f"pred_q_{idx}"):
+        try:
             response = get_chatgpt_response(question)
             st.markdown(f"**Frage:** {question}")
             st.markdown(f"**Antwort:** {response}")
+            st.markdown("---")
+        except RateLimitException:
+            st.error("Rate limit überschritten. Bitte warten Sie einen Moment und versuchen Sie es erneut.")
 
-    # Custom user input
-    with st.form(key="user_input_form"):
-        user_input = st.text_input("Ihre Frage:")
-        submit_button = st.form_submit_button(label="Fragen")
+# Custom user input
+with st.form(key="user_input_form"):
+    st.subheader("Stellen Sie Ihre eigene Frage:")
+    user_input = st.text_input("Geben Sie Ihre Frage zu Jürgen Wolfs Lebenslauf und Erfahrungen ein:")
+    submit_button = st.form_submit_button(label="Frage absenden")
 
-    if submit_button and user_input:
-        user_activity[user_id].append(time.time())
+if submit_button and user_input:
+    try:
         response = get_chatgpt_response(user_input)
         st.markdown(f"**Frage:** {user_input}")
         st.markdown(f"**Antwort:** {response}")
+        st.markdown("---")
+    except RateLimitException:
+        st.error("Rate limit überschritten. Bitte warten Sie einen Moment und versuchen Sie es erneut.")
 
-#test
+# Previous conversations
+if "conversations" not in st.session_state:
+    st.session_state.conversations = []
+
+if submit_button and user_input:
+    st.session_state.conversations.append((user_input, response))
+
+if st.session_state.conversations:
+    st.subheader("Frühere Konversationen:")
+    for q, a in reversed(st.session_state.conversations):
+        st.markdown(f"**Frage:** {q}")
+        st.markdown(f"**Antwort:** {a}")
+        st.markdown("---")
+
+# File download in the sidebar
+with open(cv_path) as f:
+    st.sidebar.download_button("Lebenslauf herunterladen", f, file_name="JürgenWolf_Lebenslauf.txt")
