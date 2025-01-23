@@ -1,6 +1,9 @@
-import streamlit as st
 import openai
+import streamlit as st
 from ratelimit import limits, RateLimitException, sleep_and_retry
+
+# Initialize OpenAI with API key from Streamlit Secrets
+openai.api_key = st.secrets["OPENAI_API_KEY"]
 
 # Streamlit page configuration
 st.set_page_config(
@@ -37,14 +40,6 @@ st.sidebar.info("Entdecken Sie mehr spannende Projekte und Tutorials.")
 st.sidebar.title("Kontakt")
 st.sidebar.info("Kontaktieren Sie mich für berufliche Möglichkeiten.")
 
-# API Key Management using Streamlit Secrets
-try:
-    openai.api_key = st.secrets["OPENAI_API_KEY"]
-except KeyError:
-    st.error("Fehler: OPENAI_API_KEY ist nicht in den Streamlit Secrets konfiguriert. "
-             "Bitte stellen Sie sicher, dass der Schlüssel in den App-Einstellungen hinzugefügt wurde.")
-    st.stop()
-
 # Load content from files
 cv_path = "code.txt"  # Path to the CV file
 additional_info_path = "info.txt"  # Path to the additional info file
@@ -75,6 +70,7 @@ ONE_MINUTE = 60
 @limits(calls=5, period=ONE_MINUTE)
 def get_chatgpt_response(prompt):
     try:
+        # Update this part to match the new OpenAI API v1.0.0+ syntax
         response = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
