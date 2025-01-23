@@ -80,7 +80,8 @@ def get_chatgpt_response(prompt):
             max_tokens=500
         )
         # Corrected response extraction
-        return completion.choices[0].message['content']
+        return completion.choices[0].message.content
+
     except Exception as e:
         return f"Fehler: {str(e)}"
 
