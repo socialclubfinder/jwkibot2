@@ -72,15 +72,15 @@ ONE_MINUTE = 60
 def get_chatgpt_response(prompt):
     try:
         # Using OpenAI client and method
-        chat_completion = client.chat.completions.create(
-            model="gpt-4",  # Make sure you're using the right model
+        completion = client.chat.completions.create(
+            model="gpt-4o",  # Ensure you're using the correct model
             messages=[
                 {"role": "system", "content": f"Du bist ein Chatbot, der Fragen basierend auf Jürgen Wolfs Lebenslauf und zusätzlichen Informationen beantwortet:\n\n{combined_content}"},
                 {"role": "user", "content": prompt}
             ],
             max_tokens=500
         )
-        return chat_completion.choices[0].message["content"]
+        return completion.choices[0].message["content"]
     except Exception as e:
         return f"Fehler: {str(e)}"
 
